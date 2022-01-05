@@ -1,0 +1,516 @@
+diff --git a/App.tsx b/App.tsx
+deleted file mode 100644
+index a745c9f..0000000
+--- a/App.tsx
++++ /dev/null
+@@ -1,91 +0,0 @@
+-import * as React from 'react';
+-import { View, Text, Button } from 'react-native';
+-import { NavigationContainer } from '@react-navigation/native';
+-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+-import Ionicons from 'react-native-vector-icons/Ionicons';
+-
+-function Tab1() {
+-  return <Text>Java</Text>;
+-}
+-function Tab2() {
+-  return <Text>Android</Text>;
+-}
+-//顶部导航器
+-const TopTab = createMaterialTopTabNavigator();
+-function PopularScreen() {
+-  return (<TopTab.Navigator>
+-    <TopTab.Screen name="index1" component={Tab1}
+-      options={{
+-        title: 'RN'
+-      }}
+-    />
+-    <TopTab.Screen name="index2" component={Tab2}
+-      options={{
+-        title: 'Flutter'
+-      }}
+-    />
+-  </TopTab.Navigator>);
+-}
+-function TrendingScreen() {
+-  return (
+-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+-      <Text>趋势</Text>
+-    </View>
+-  );
+-}
+-//底部导航器
+-const Tab = createBottomTabNavigator();
+-function MainScreen() {
+-  return (
+-    <Tab.Navigator>
+-      <Tab.Screen name="popular" component={PopularScreen}
+-        options={{
+-          tabBarLabel: '最热',
+-          headerShown: false,
+-          tabBarIcon: ({ color, focused }) => (
+-            <MaterialIcons name={'whatshot'} size={26} style={{ color: color }} />
+-          ),
+-        }}
+-      />
+-      <Tab.Screen name="treding" component={TrendingScreen}
+-        options={{
+-          tabBarLabel: '趋势',
+-          headerShown: false,
+-          tabBarIcon: ({ color, focused }) => (
+-            <Ionicons name={'md-trending-up'} size={26} style={{ color: color }} />
+-          ),
+-        }}
+-      />
+-    </Tab.Navigator>
+-  );
+-}
+-
+-
+-function WelcomePage(props: any) {
+-  const { navigation } = props;
+-  return (
+-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+-      <Text>欢迎页</Text>
+-      <Button title={"跳转首页"} onPress={() => {
+-        navigation.navigate('main')
+-      }} />
+-    </View>
+-  );
+-}
+-//主导航器/基础导航器
+-const Stack = createNativeStackNavigator();
+-function App() {
+-  return (
+-    <NavigationContainer>
+-      <Stack.Navigator>
+-        <Stack.Screen name="index" component={WelcomePage} />
+-        <Stack.Screen name="main" component={MainScreen} />
+-      </Stack.Navigator>
+-    </NavigationContainer>
+-  );
+-}
+-
+-export default App;
+\ No newline at end of file
+diff --git a/__tests__/App-test.tsx b/__tests__/App-test.tsx
+index 1784766..5f1f77a 100644
+--- a/__tests__/App-test.tsx
++++ b/__tests__/App-test.tsx
+@@ -4,7 +4,7 @@
+ 
+ import 'react-native';
+ import React from 'react';
+-import App from '../App';
++import App from '../js/App';
+ 
+ // Note: test renderer must be required after react-native.
+ import renderer from 'react-test-renderer';
+diff --git a/index.js b/index.js
+index 448e94a..6da6a25 100644
+--- a/index.js
++++ b/index.js
+@@ -4,7 +4,7 @@
+ 
+ import { AppRegistry } from 'react-native';
+ import 'react-native-gesture-handler';
+-import App from './App';
++import App from './js/App';
+ import { name as appName } from './app.json';
+ import AsyncStorageDemoPage from './js/AsyncStorageDemoPage';
+ import FetchDemoPage from './js/FetchDemoPage';
+@@ -12,4 +12,4 @@ import HiNetTestPage from './js/HiNetTestPage';
+ import LoginPage from './js/page/LoginPage';
+ import AppNavigators from './js/navigator/AppNavigators';
+ 
+-AppRegistry.registerComponent(appName, () => AppNavigators);
++AppRegistry.registerComponent(appName, () => App);
+diff --git a/js/App.tsx b/js/App.tsx
+new file mode 100644
+index 0000000..7adf0ba
+--- /dev/null
++++ b/js/App.tsx
+@@ -0,0 +1,13 @@
++import React from 'react';
++import { Provider } from 'react-redux';
++import AppNavigator from './navigator/AppNavigators';
++import store from './store';
++
++const App = () => {
++  const App = AppNavigator();
++  /**
++   * 将store传递给App框架
++   */
++  return <Provider store={store}>{App}</Provider>;
++};
++export default App;
+\ No newline at end of file
+diff --git a/js/action/index.js b/js/action/index.js
+new file mode 100644
+index 0000000..a3ff8f1
+--- /dev/null
++++ b/js/action/index.js
+@@ -0,0 +1,7 @@
++import { onThemeChange } from './theme';
++/*
++* action聚合
++*/
++export default {
++  onThemeChange
++};
+diff --git a/js/action/theme/index.js b/js/action/theme/index.js
+new file mode 100644
+index 0000000..c2779ba
+--- /dev/null
++++ b/js/action/theme/index.js
+@@ -0,0 +1,10 @@
++import Types from '../types';
++
++/**
++ * 主题变更
++ * @param theme
++ * @returns {{type: string, theme: *}}
++ */
++export function onThemeChange(theme) {
++  return { type: Types.THEME_CHANGE, theme: theme };
++}
+\ No newline at end of file
+diff --git a/js/action/types.js b/js/action/types.js
+new file mode 100644
+index 0000000..ec953ca
+--- /dev/null
++++ b/js/action/types.js
+@@ -0,0 +1,3 @@
++export default {
++  THEME_CHANGE: 'THEME_CHANGE'
++};
+diff --git a/js/page/HomePage.js b/js/page/HomePage.js
+index df42221..983bbda 100644
+--- a/js/page/HomePage.js
++++ b/js/page/HomePage.js
+@@ -1,17 +1,27 @@
+ import React, { Component } from 'react';
+ import SafeAreaViewPlus from 'react-native-safe-area-plus';
++import { connect } from 'react-redux';
+ import DynamicTabNavigator from '../navigator/DynamicTabNavigator';
+ import NavigationUtil from '../navigator/NavigationUtil';
+ 
+-export default class HomePage extends Component {
++class HomePage extends Component {
+   constructor(props) {
+     super(props);
+   }
+ 
+   render() {
++    //使用从store中注入的props
++    const { theme } = this.props;
+     NavigationUtil.navigation = this.props.navigation;
+-    return <SafeAreaViewPlus topColor="#2196f3">
++    return <SafeAreaViewPlus topColor={theme}>
+       <DynamicTabNavigator />
+     </SafeAreaViewPlus>
+   }
+ }
++//我们声明`HomePage`组件需要整个 store 中的哪一部分数据作为自己的 props
++const mapStateToProps = (state) => ({
++  theme: state.theme.theme,
++});
++//包装 component，注入 state 到其默认的 connect(mapStateToProps)(HomePage) 中；
++//这里用到了`connect`，我们将`mapStateToProps`作为参数传给`connect`，`connect`会返回一个生成组件函数，然后我们将App组件当做参数传给这个函数。
++export default connect(mapStateToProps)(HomePage);
+diff --git a/js/page/PopularPage.js b/js/page/PopularPage.js
+index d9e557b..8fae6f5 100644
+--- a/js/page/PopularPage.js
++++ b/js/page/PopularPage.js
+@@ -1,9 +1,12 @@
+ import React, { Component } from 'react';
+ import {
++  Button,
+   StyleSheet,
+   Text, View
+ } from 'react-native';
+ import NavigationBar from 'react-native-navbar-plus';
++import { connect } from 'react-redux';
++import actions from '../action';
+ import { tabNav } from '../navigator/NavigationDelegate';
+ import keys from '../res/data/keys.json';
+ 
+@@ -16,7 +19,7 @@ export default class PopularPage extends Component {
+     );
+     const TabNavigator = keys.length
+       ? tabNav({
+-        Component: PopularTab,
++        Component: PopularTabPage,
+         theme: { themeColor: '#2196f3' },
+         keys,
+       })
+@@ -33,11 +36,21 @@ export default class PopularPage extends Component {
+ 
+ class PopularTab extends Component {
+   render() {
+-    const { tabLabel } = this.props;
+-    return (<Text>{tabLabel}</Text>);
++    const { tabLabel, onThemeChange } = this.props;
++    return (<View>
++      <Text>{tabLabel}</Text>
++      <Button title='改变主题' onPress={() => {
++        onThemeChange('yellow');
++      }} />
++    </View>);
+   }
+ }
+-
++//将dispatch映射给onThemeChange，然后注入到组件的props中
++const mapDispatchToProps = (dispatch) => ({
++  onThemeChange: (theme) => dispatch(actions.onThemeChange(theme)),
++});
++//包装 component，注入 dispatch到PopularTab
++const PopularTabPage = connect(null, mapDispatchToProps)(PopularTab);
+ 
+ const styles = StyleSheet.create({
+   container: {
+diff --git a/js/reducer/index.js b/js/reducer/index.js
+new file mode 100644
+index 0000000..0ba9d8d
+--- /dev/null
++++ b/js/reducer/index.js
+@@ -0,0 +1,12 @@
++import { combineReducers } from 'redux';
++import theme from './theme'
++
++/**
++ * 合并reducer，通过combineReducers将多个reducer合并成一个根reducer
++ * @type {Reducer<any> | Reducer<any, AnyAction>}
++ */
++const index = combineReducers({
++  theme: theme
++});
++
++export default index;
+diff --git a/js/reducer/theme/index.js b/js/reducer/theme/index.js
+new file mode 100644
+index 0000000..ee7b1c6
+--- /dev/null
++++ b/js/reducer/theme/index.js
+@@ -0,0 +1,20 @@
++import Types from '../../action/types';
++
++//定义state默认值，注意这里的数据结构取值的时候要保持一致
++const defaultState = {
++  theme: 'red'
++};
++/**
++ * action处理函数，处理action返回state
++ */
++export default function onAction(state = defaultState, action) {
++  switch (action.type) {
++    case Types.THEME_CHANGE:
++      return {
++        ...state,
++        theme: action.theme,
++      };
++    default:
++      return state;
++  }
++}
+diff --git a/js/store/index.js b/js/store/index.js
+new file mode 100644
+index 0000000..f044c8a
+--- /dev/null
++++ b/js/store/index.js
+@@ -0,0 +1,10 @@
++import { applyMiddleware, createStore } from 'redux';
++import thunk from 'redux-thunk';
++import reducers from '../reducer';
++//设置中间件
++const middlewares = [thunk];
++
++/**
++ * 创建store
++ */
++export default createStore(reducers, applyMiddleware(...middlewares));
+diff --git a/package-lock.json b/package-lock.json
+index e8bd73d..fb918a6 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1628,6 +1628,15 @@
+       "resolved": "https://registry.npmjs.org/@types/hammerjs/-/hammerjs-2.0.40.tgz",
+       "integrity": "sha512-VbjwR1fhsn2h2KXAY4oy1fm7dCxaKy0D+deTb8Ilc3Eo3rc5+5eA4rfYmZaHgNJKxVyI0f6WIXzO2zLkVmQPHA=="
+     },
++    "@types/hoist-non-react-statics": {
++      "version": "3.3.1",
++      "resolved": "https://registry.npmjs.org/@types/hoist-non-react-statics/-/hoist-non-react-statics-3.3.1.tgz",
++      "integrity": "sha512-iMIqiko6ooLrTh1joXodJK5X9xeEALT1kM5G3ZLhD3hszxBdIEd5C75U834D9mLcINgD4OyZf5uQXjkuYydWvA==",
++      "requires": {
++        "@types/react": "*",
++        "hoist-non-react-statics": "^3.3.0"
++      }
++    },
+     "@types/istanbul-lib-coverage": {
+       "version": "2.0.3",
+       "resolved": "https://registry.npmjs.org/@types/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.3.tgz",
+@@ -1685,14 +1694,12 @@
+     "@types/prop-types": {
+       "version": "15.7.4",
+       "resolved": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.4.tgz",
+-      "integrity": "sha512-rZ5drC/jWjrArrS8BR6SIr4cWpW09RNTYt9AMZo3Jwwif+iacXAqgVjm0B0Bv/S1jhDXKHqRVNCbACkJ89RAnQ==",
+-      "dev": true
++      "integrity": "sha512-rZ5drC/jWjrArrS8BR6SIr4cWpW09RNTYt9AMZo3Jwwif+iacXAqgVjm0B0Bv/S1jhDXKHqRVNCbACkJ89RAnQ=="
+     },
+     "@types/react": {
+       "version": "17.0.19",
+       "resolved": "https://registry.npmjs.org/@types/react/-/react-17.0.19.tgz",
+       "integrity": "sha512-sX1HisdB1/ZESixMTGnMxH9TDe8Sk709734fEQZzCV/4lSu9kJCPbo2PbTRoZM+53Pp0P10hYVyReUueGwUi4A==",
+-      "dev": true,
+       "requires": {
+         "@types/prop-types": "*",
+         "@types/scheduler": "*",
+@@ -1718,6 +1725,17 @@
+         "@types/react-native": "*"
+       }
+     },
++    "@types/react-redux": {
++      "version": "7.1.18",
++      "resolved": "https://registry.npmjs.org/@types/react-redux/-/react-redux-7.1.18.tgz",
++      "integrity": "sha512-9iwAsPyJ9DLTRH+OFeIrm9cAbIj1i2ANL3sKQFATqnPWRbg+jEFXyZOKHiQK/N86pNRXbb4HRxAxo0SIX1XwzQ==",
++      "requires": {
++        "@types/hoist-non-react-statics": "^3.3.0",
++        "@types/react": "*",
++        "hoist-non-react-statics": "^3.3.0",
++        "redux": "^4.0.0"
++      }
++    },
+     "@types/react-test-renderer": {
+       "version": "16.9.5",
+       "resolved": "https://registry.npmjs.org/@types/react-test-renderer/-/react-test-renderer-16.9.5.tgz",
+@@ -1743,8 +1761,7 @@
+     "@types/scheduler": {
+       "version": "0.16.2",
+       "resolved": "https://registry.npmjs.org/@types/scheduler/-/scheduler-0.16.2.tgz",
+-      "integrity": "sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==",
+-      "dev": true
++      "integrity": "sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew=="
+     },
+     "@types/stack-utils": {
+       "version": "2.0.1",
+@@ -2950,8 +2967,7 @@
+     "csstype": {
+       "version": "3.0.8",
+       "resolved": "https://registry.npmjs.org/csstype/-/csstype-3.0.8.tgz",
+-      "integrity": "sha512-jXKhWqXPmlUeoQnF/EhTtTl4C9SnrxSH/jZUih3jmO6lBKr99rP3/+FmrMj4EFpOXzMtXHAZkd3x0E6h6Fgflw==",
+-      "dev": true
++      "integrity": "sha512-jXKhWqXPmlUeoQnF/EhTtTl4C9SnrxSH/jZUih3jmO6lBKr99rP3/+FmrMj4EFpOXzMtXHAZkd3x0E6h6Fgflw=="
+     },
+     "data-urls": {
+       "version": "2.0.0",
+@@ -7040,20 +7056,19 @@
+       }
+     },
+     "react-native-isiphonex-device": {
+-      "version": "2.0.0",
+-      "resolved": "https://registry.npmjs.org/react-native-isiphonex-device/-/react-native-isiphonex-device-2.0.0.tgz",
+-      "integrity": "sha512-NwHDgCeqY0m6FeNu+BRb9vO9RDXQ6KwDIBnCJAyLPKMAH/6aDaVU7RXMMHHXjkhgWABF16W0etmJFACSOiP4wQ==",
++      "version": "2.5.0",
++      "resolved": "https://registry.npmjs.org/react-native-isiphonex-device/-/react-native-isiphonex-device-2.5.0.tgz",
++      "integrity": "sha512-nd3bN0dTSqAFhPuuSWQlYy92+hgRTQvQb+uZbgYmrGLCzwA5NwecsddnppSlUn0itMSem36qcYfPBhETU4Gv+g==",
+       "requires": {
+         "prop-types": "^15.6.0"
+       }
+     },
+     "react-native-navbar-plus": {
+-      "version": "2.0.0",
+-      "resolved": "https://registry.npmjs.org/react-native-navbar-plus/-/react-native-navbar-plus-2.0.0.tgz",
+-      "integrity": "sha512-iYrEiQKDtY6fILFwU0HLbrW6YbbkFUdoTjq4iW3pUxyDwvk6VZef/rjDW1jpcRj87tfQzt2OvdCxzq6cJQZfiQ==",
++      "version": "2.5.0",
++      "resolved": "https://registry.npmjs.org/react-native-navbar-plus/-/react-native-navbar-plus-2.5.0.tgz",
++      "integrity": "sha512-893wPmmECIZYJA6doJBNEnCMLAug6/9qiIkrkStDCkMyLWAEQDGircleXWztgpswuy2nhabprfBdNt5G4LN8pA==",
+       "requires": {
+-        "prop-types": "^15.6.0",
+-        "react-native-isiphonex-device": "^2.0.0"
++        "prop-types": "^15.6.0"
+       }
+     },
+     "react-native-pager-view": {
+@@ -7067,12 +7082,11 @@
+       "integrity": "sha512-yOwiiPJ1rk+/nfK13eafbpW6sKW0jOnsRem2C1LPJjM3tfTof6hlvV5eWHATye3XOpu2cJ7N+HdkUvUDGwFD2Q=="
+     },
+     "react-native-safe-area-plus": {
+-      "version": "2.0.0",
+-      "resolved": "https://registry.npmjs.org/react-native-safe-area-plus/-/react-native-safe-area-plus-2.0.0.tgz",
+-      "integrity": "sha512-DReFUPTZ2PzA18MDTK5HUOZzJfq23ekxyusVodfHmPPMdil8ZlSvqmnJl1qLSpNcFL1khSX73ctmTByltYKZMg==",
++      "version": "2.5.0",
++      "resolved": "https://registry.npmjs.org/react-native-safe-area-plus/-/react-native-safe-area-plus-2.5.0.tgz",
++      "integrity": "sha512-hctBKd+QTOUuYBaR3UMZazZm9lBrbbFb3dFYkvxh+2SUiVEo3LARKhnMqoYWR3Kz8DY5/D9MKFbqNdopBmSQDQ==",
+       "requires": {
+-        "prop-types": "^15.6.0",
+-        "react-native-isiphonex-device": "^2.0.0"
++        "prop-types": "^15.6.0"
+       }
+     },
+     "react-native-screens": {
+@@ -7149,6 +7163,26 @@
+         }
+       }
+     },
++    "react-redux": {
++      "version": "7.2.5",
++      "resolved": "https://registry.npmjs.org/react-redux/-/react-redux-7.2.5.tgz",
++      "integrity": "sha512-Dt29bNyBsbQaysp6s/dN0gUodcq+dVKKER8Qv82UrpeygwYeX1raTtil7O/fftw/rFqzaf6gJhDZRkkZnn6bjg==",
++      "requires": {
++        "@babel/runtime": "^7.12.1",
++        "@types/react-redux": "^7.1.16",
++        "hoist-non-react-statics": "^3.3.2",
++        "loose-envify": "^1.4.0",
++        "prop-types": "^15.7.2",
++        "react-is": "^16.13.1"
++      },
++      "dependencies": {
++        "react-is": {
++          "version": "16.13.1",
++          "resolved": "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz",
++          "integrity": "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="
++        }
++      }
++    },
+     "react-refresh": {
+       "version": "0.4.3",
+       "resolved": "https://registry.npmjs.org/react-refresh/-/react-refresh-0.4.3.tgz",
+@@ -7245,6 +7279,19 @@
+         "tslib": "^2.0.1"
+       }
+     },
++    "redux": {
++      "version": "4.1.1",
++      "resolved": "https://registry.npmjs.org/redux/-/redux-4.1.1.tgz",
++      "integrity": "sha512-hZQZdDEM25UY2P493kPYuKqviVwZ58lEmGQNeQ+gXa+U0gYPUBf7NKYazbe3m+bs/DzM/ahN12DbF+NG8i0CWw==",
++      "requires": {
++        "@babel/runtime": "^7.9.2"
++      }
++    },
++    "redux-thunk": {
++      "version": "2.3.0",
++      "resolved": "https://registry.npmjs.org/redux-thunk/-/redux-thunk-2.3.0.tgz",
++      "integrity": "sha512-km6dclyFnmcvxhAcrQV2AkZmPQjzPDjgVlQtR0EQjxZPyJ0BnMf3in1ryuR8A2qU0HldVRfxYXbFSKlI3N7Slw=="
++    },
+     "regenerate": {
+       "version": "1.4.2",
+       "resolved": "https://registry.npmjs.org/regenerate/-/regenerate-1.4.2.tgz",
+diff --git a/package.json b/package.json
+index dbac3c0..19ff062 100644
+--- a/package.json
++++ b/package.json
+@@ -26,7 +26,10 @@
+     "react-native-safe-area-plus": "^2.5.0",
+     "react-native-screens": "^3.8.0",
+     "react-native-tab-view": "^3.1.1",
+-    "react-native-vector-icons": "^8.1.0"
++    "react-native-vector-icons": "^8.1.0",
++    "react-redux": "^7.2.5",
++    "redux": "^4.1.1",
++    "redux-thunk": "^2.3.0"
+   },
+   "devDependencies": {
+     "@babel/core": "^7.12.9",
